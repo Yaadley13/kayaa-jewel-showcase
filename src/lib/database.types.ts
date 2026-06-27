@@ -38,6 +38,52 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
       };
+      contact_submissions: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          subject: string | null;
+          message: string;
+          read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          subject?: string | null;
+          message: string;
+          read?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["contact_submissions"]["Insert"]>;
+      };
+      exhibitions: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          location: string | null;
+          date: string | null;
+          cover_image: string;
+          photos: string[];
+          is_upcoming: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string;
+          location?: string | null;
+          date?: string | null;
+          cover_image?: string;
+          photos?: string[];
+          is_upcoming?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["exhibitions"]["Insert"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

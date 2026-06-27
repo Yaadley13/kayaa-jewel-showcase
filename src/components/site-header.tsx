@@ -13,6 +13,7 @@ const WaIcon = ({ className = "" }: { className?: string }) => (
 const nav = [
   { to: "/", label: "Home" },
   { to: "/shop", label: "Shop" },
+  { to: "/exhibitions", label: "Exhibitions" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
 ] as const;
@@ -27,10 +28,10 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 md:px-10">
           {/* Brand */}
           <Link to="/" className="flex flex-col leading-none">
-            <span className="font-serif text-[1.35rem] tracking-tight text-[#2b2421]">
+            <span className="font-serif text-[1.35rem] font-bold tracking-tight text-[#2b2421]">
               Jewels by Kayaa
             </span>
-            <span className="text-[0.55rem] tracking-[0.22em] uppercase text-[#9a8c82] mt-0.5">
+            <span className="text-[0.55rem] tracking-[0.22em] uppercase text-[#9a8c82] mt-1.5">
               Delicate&nbsp;&nbsp;·&nbsp;&nbsp;Timeless&nbsp;&nbsp;·&nbsp;&nbsp;Yours
             </span>
           </Link>

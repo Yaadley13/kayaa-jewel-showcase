@@ -16,8 +16,8 @@ export function SiteFooter() {
           {/* Brand column */}
           <div>
             <Link to="/" className="flex flex-col leading-none">
-              <span className="font-serif text-[1.35rem] text-[#2b2421]">Jewels by Kayaa</span>
-              <span className="mt-0.5 text-[0.55rem] tracking-[0.22em] uppercase text-[#9a8c82]">
+              <span className="font-serif text-[1.35rem] font-bold text-[#2b2421]">Jewels by Kayaa</span>
+              <span className="mt-1.5 text-[0.55rem] tracking-[0.22em] uppercase text-[#9a8c82]">
                 Delicate&nbsp;&nbsp;·&nbsp;&nbsp;Timeless&nbsp;&nbsp;·&nbsp;&nbsp;Yours
               </span>
             </Link>
@@ -34,6 +34,7 @@ export function SiteFooter() {
             </p>
             <ul className="space-y-3 text-sm text-[#5a5047]">
               <li><Link to="/shop" className="hover:text-[#d64a86] transition-colors">Shop All</Link></li>
+              <li><Link to="/exhibitions" className="hover:text-[#d64a86] transition-colors">Exhibitions</Link></li>
               <li><Link to="/about" className="hover:text-[#d64a86] transition-colors">About Us</Link></li>
               <li><Link to="/contact" className="hover:text-[#d64a86] transition-colors">Contact</Link></li>
             </ul>

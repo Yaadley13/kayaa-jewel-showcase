@@ -4,7 +4,7 @@ export const BRAND = {
   phone: "919925183696",
   whatsapp: "https://wa.me/919925183696?text=Hi%20Kayaa%2C%20I%27d%20love%20to%20enquire%20about%20a%20piece.",
   instagram: "https://www.instagram.com/jewels_by_kayaa?igsh=M2FpdmszMnVweTc0",
-  email: "hello@jewelsbykayaa.com",
+  email: "jewelsbykayaa@gmail.com",
 };
 
 /**

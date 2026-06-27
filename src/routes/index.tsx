@@ -80,13 +80,13 @@ function Home() {
       </section>
 
       {/* ── FEATURED COLLECTION ── */}
-      <ProductSection eyebrow="Curated for You" title="Featured Collection" products={featured} isLoading={isLoading} />
+      <ProductSection eyebrow="Curated for You" title="Featured Collection" products={featured} isLoading={isLoading} viewAllHref="/shop?filter=featured" />
 
       {/* ── BEST SELLERS ── */}
-      <ProductSection eyebrow="Most Loved" title="Best Sellers" products={bestsellers} bgClass="bg-white" isLoading={isLoading} />
+      <ProductSection eyebrow="Most Loved" title="Best Sellers" products={bestsellers} bgClass="bg-white" isLoading={isLoading} viewAllHref="/shop?filter=bestseller" />
 
       {/* ── NEW ARRIVALS ── */}
-      <ProductSection eyebrow="Just In" title="New Arrivals" products={newArrivals} isLoading={isLoading} />
+      <ProductSection eyebrow="Just In" title="New Arrivals" products={newArrivals} isLoading={isLoading} viewAllHref="/shop?filter=new" />
 
       {/* ── BRAND STORY ── */}
       <section className="bg-white py-20">
@@ -119,32 +119,56 @@ function ProductSection({
   products,
   bgClass = "bg-[#faf7f4]",
   isLoading = false,
+  viewAllHref,
 }: {
   eyebrow: string;
   title: string;
   products: Product[];
   bgClass?: string;
   isLoading?: boolean;
+  viewAllHref?: string;
 }) {
   return (
     <section className={`${bgClass} py-16 md:py-20`}>
       <div className="mx-auto max-w-7xl px-6 md:px-10">
-        <div className="mb-10 text-center">
-          <p className="text-[0.65rem] tracking-[0.22em] uppercase text-[#d64a86] font-medium">
-            {eyebrow}
-          </p>
-          <h2 className="mt-2 font-serif text-[2.2rem] text-[#2b2421] md:text-[2.6rem]">
-            {title}
-          </h2>
+        <div className="mb-10 flex items-end justify-between">
+          <div>
+            <p className="text-[0.65rem] tracking-[0.22em] uppercase text-[#d64a86] font-medium">
+              {eyebrow}
+            </p>
+            <h2 className="mt-2 font-serif text-[2.2rem] text-[#2b2421] md:text-[2.6rem]">
+              {title}
+            </h2>
+          </div>
+          {viewAllHref && (
+            <Link
+              to={viewAllHref}
+              className="group hidden md:flex items-center gap-2 rounded-full border border-[#d8d0c6] px-5 py-2 text-[0.72rem] tracking-wider uppercase text-[#5a5047] transition-all hover:border-[#2b2421] hover:text-[#2b2421]"
+            >
+              View All <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          )}
         </div>
         {isLoading ? (
           <ProductGridSkeleton count={4} />
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+              {products.slice(0, 4).map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+            {viewAllHref && (
+              <div className="mt-8 text-center md:hidden">
+                <Link
+                  to={viewAllHref}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#2b2421] px-6 py-2.5 text-[0.75rem] tracking-wider uppercase text-[#2b2421] transition-colors hover:bg-[#2b2421] hover:text-white"
+                >
+                  View All {title} <ArrowRight size={13} />
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
