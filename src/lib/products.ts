@@ -2,53 +2,119 @@ import necklace from "@/assets/product-necklace.jpg";
 import earrings from "@/assets/product-earrings.jpg";
 import ring from "@/assets/product-ring.jpg";
 import bracelet from "@/assets/product-bracelet.jpg";
+import { supabase } from "./supabase";
+import type { Database } from "./database.types";
 
 export type Product = {
   id: string;
   name: string;
   price: number;
-  category: "Necklaces" | "Earrings" | "Rings" | "Bracelets";
+  category: "Necklaces" | "Earrings" | "Rings" | "Bracelets" | "Anklets";
   description: string;
   tags: string[];
   image: string;
   imageAlt?: string;
   featured: boolean;
   isNew?: boolean;
+  isBestSeller?: boolean;
+  isSoldOut?: boolean;
 };
 
-export const CATEGORIES: Product["category"][] = ["Necklaces", "Earrings", "Rings", "Bracelets"];
+export const CATEGORIES: Product["category"][] = ["Necklaces", "Rings", "Earrings", "Bracelets", "Anklets"];
 
+// Seed data used as fallback when DB is empty
 export const seedProducts: Product[] = [
-  { id: "p1", name: "Pearl Whisper Necklace", price: 2890, category: "Necklaces", description: "A single freshwater pearl suspended on a fine gold-plated chain. Effortless for everyday, beautiful for forever.", tags: ["bestseller","gold","pearl"], image: necklace, imageAlt: necklace, featured: true, isNew: false },
-  { id: "p2", name: "Solene Gold Hoops", price: 1990, category: "Earrings", description: "Featherweight medium hoops crafted in 18k gold-plated brass. The pair you'll reach for every day.", tags: ["bestseller","hoops"], image: earrings, imageAlt: earrings, featured: true, isNew: true },
-  { id: "p3", name: "Halo Stacking Ring", price: 1490, category: "Rings", description: "A slim, perfectly polished band designed to stack — wear alone for restraint, layer for impact.", tags: ["minimal","stack"], image: ring, imageAlt: ring, featured: false, isNew: true },
-  { id: "p4", name: "Lune Charm Bracelet", price: 2290, category: "Bracelets", description: "A satellite chain finished with a hand-engraved heart charm. Adjustable for the perfect fit.", tags: ["new","charm"], image: bracelet, imageAlt: bracelet, featured: true, isNew: true },
-  { id: "p5", name: "Mira Layering Chain", price: 2490, category: "Necklaces", description: "A weightless rope chain designed to layer with your favourites.", tags: ["layering"], image: necklace, imageAlt: necklace, featured: false, isNew: false },
-  { id: "p6", name: "Petite Pearl Studs", price: 1290, category: "Earrings", description: "Tiny freshwater pearl studs — quiet, classic, always right.", tags: ["pearl","minimal"], image: earrings, imageAlt: earrings, featured: false, isNew: false },
-  { id: "p7", name: "Aura Signet Ring", price: 2190, category: "Rings", description: "A modern take on the signet — smooth, sculptural, weighty.", tags: ["statement"], image: ring, imageAlt: ring, featured: true, isNew: false },
-  { id: "p8", name: "Soleil Anklet", price: 1690, category: "Bracelets", description: "A delicate beaded anklet for warm evenings and bare feet.", tags: ["summer"], image: bracelet, imageAlt: bracelet, featured: false, isNew: false },
+  { id: "p1", name: "Celestia Solitaire Ring", price: 4200, category: "Rings", description: "A delicate solitaire ring featuring a brilliant-cut stone set in fine gold-plated brass. Minimal, luminous, and made for everyday wear.", tags: ["bestseller","ring","gold"], image: ring, imageAlt: ring, featured: true, isNew: false, isBestSeller: true },
+  { id: "p2", name: "Luna Chain Bracelet", price: 2800, category: "Bracelets", description: "A fine satellite chain bracelet with a subtle adjustable clasp. Light as air, pretty as moonlight.", tags: ["new","bracelet","chain"], image: bracelet, imageAlt: bracelet, featured: true, isNew: true, isBestSeller: false },
+  { id: "p3", name: "Layered Rose Necklace Set", price: 6800, category: "Necklaces", description: "A two-piece layering set — a delicate rose-quartz pendant paired with a fine gold link chain. Wear together or separate.", tags: ["new","bestseller","necklace","layered"], image: necklace, imageAlt: necklace, featured: true, isNew: true, isBestSeller: true },
+  { id: "p4", name: "Charm Anklet", price: 2200, category: "Anklets", description: "A dainty gold anklet adorned with tiny charm pendants. Perfect for bare feet and warm evenings.", tags: ["new","anklet","charm"], image: bracelet, imageAlt: bracelet, featured: true, isNew: true, isBestSeller: false },
+  { id: "p5", name: "Aurora Hoop Earrings", price: 3500, category: "Earrings", description: "Medium-sized seamless gold hoops with a mirror polish finish. The pair you'll reach for every single day.", tags: ["bestseller","hoops","earrings"], image: earrings, imageAlt: earrings, featured: false, isNew: false, isBestSeller: true },
+  { id: "p6", name: "Pearl Stud Earrings", price: 1800, category: "Earrings", description: "Lustrous freshwater pearl studs set in gold-plated posts. Classic, quiet, always right.", tags: ["bestseller","pearl","earrings"], image: earrings, imageAlt: earrings, featured: false, isNew: false, isBestSeller: true },
+  { id: "p7", name: "Stacking Ring Set", price: 5400, category: "Rings", description: "Three slim bands designed to stack — wear as a set or mix with your own. Minimalist perfection.", tags: ["bestseller","rings","stack"], image: ring, imageAlt: ring, featured: false, isNew: false, isBestSeller: true },
+  { id: "p8", name: "Moonstone Pendant", price: 3900, category: "Necklaces", description: "A glowing oval moonstone set in a simple gold bezel on a delicate chain. Ethereal and understated.", tags: ["new","necklace","pendant","moonstone"], image: necklace, imageAlt: necklace, featured: false, isNew: true, isBestSeller: false },
 ];
 
-const STORAGE_KEY = "kayaa.products.v1";
+// ─── DB row ↔ Product mappers ────────────────────────────────────────────────
 
-export function loadProducts(): Product[] {
-  if (typeof window === "undefined") return seedProducts;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return seedProducts;
-    const parsed = JSON.parse(raw) as Product[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return seedProducts;
-    return parsed;
-  } catch {
-    return seedProducts;
-  }
+type DbRow = Database["public"]["Tables"]["products"]["Row"];
+
+export function rowToProduct(row: DbRow): Product {
+  return {
+    id: row.id,
+    name: row.name,
+    price: row.price,
+    category: row.category,
+    description: row.description,
+    tags: row.tags ?? [],
+    image: row.image,
+    imageAlt: row.image_alt ?? undefined,
+    featured: row.featured,
+    isNew: row.is_new,
+    isBestSeller: row.is_best_seller,
+    isSoldOut: row.is_sold_out,
+  };
 }
 
-export function saveProducts(products: Product[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  window.dispatchEvent(new Event("kayaa:products"));
+export function productToRow(p: Product): Database["public"]["Tables"]["products"]["Insert"] {
+  return {
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    category: p.category,
+    description: p.description,
+    tags: p.tags,
+    image: p.image,
+    image_alt: p.imageAlt ?? null,
+    featured: p.featured,
+    is_new: p.isNew ?? false,
+    is_best_seller: p.isBestSeller ?? false,
+    is_sold_out: p.isSoldOut ?? false,
+  };
 }
+
+// ─── Supabase CRUD ────────────────────────────────────────────────────────────
+
+export async function fetchProducts(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map(rowToProduct);
+}
+
+export async function upsertProduct(product: Product): Promise<Product> {
+  const { data, error } = await supabase
+    .from("products")
+    .upsert(productToRow(product), { onConflict: "id" })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToProduct(data);
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function seedIfEmpty(): Promise<void> {
+  const { count, error } = await supabase
+    .from("products")
+    .select("*", { count: "exact", head: true });
+
+  if (error) throw error;
+  if ((count ?? 0) > 0) return;
+
+  // Strip local asset imports — use empty string as placeholder image when seeding
+  const rows = seedProducts.map((p) => productToRow({ ...p, image: "", imageAlt: "" }));
+  const { error: insertError } = await supabase.from("products").insert(rows);
+  if (insertError) throw insertError;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function formatPrice(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;

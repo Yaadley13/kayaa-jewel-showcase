@@ -47,7 +47,7 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #eee8e0;
+  --background: #faf7f4;
   --foreground: #2b2421;
 
   --card: #ffffff;
@@ -82,8 +82,17 @@
 @layer base {
   * {
     border-color: var(--color-border);
+    box-sizing: border-box;
   }
-  html, body {
+  html {
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    line-height: inherit;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);

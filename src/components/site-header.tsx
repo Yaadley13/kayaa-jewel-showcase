@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Instagram, Search, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { BRAND } from "@/lib/brand";
+import { SearchOverlay } from "@/components/search-overlay";
 
 const WaIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
@@ -17,60 +18,106 @@ const nav = [
 ] as const;
 
 export function SiteHeader() {
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-5 py-4 md:px-10">
-        <Link to="/" className="font-serif text-xl md:text-2xl tracking-wide">
-          Jewels <span className="italic text-gradient">by</span> Kayaa
-        </Link>
+    <>
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-[#e8e0d5]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 md:px-10">
+          {/* Brand */}
+          <Link to="/" className="flex flex-col leading-none">
+            <span className="font-serif text-[1.35rem] tracking-tight text-[#2b2421]">
+              Jewels by Kayaa
+            </span>
+            <span className="text-[0.55rem] tracking-[0.22em] uppercase text-[#9a8c82] mt-0.5">
+              Delicate&nbsp;&nbsp;·&nbsp;&nbsp;Timeless&nbsp;&nbsp;·&nbsp;&nbsp;Yours
+            </span>
+          </Link>
 
-        <nav className="hidden justify-center gap-9 md:flex">
-          {nav.map((n) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              className="text-[0.72rem] tracking-luxe uppercase text-foreground/70 transition-colors hover:text-foreground"
-              activeProps={{ className: "text-foreground" }}
-              activeOptions={{ exact: n.to === "/" }}
-            >
-              {n.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2 md:gap-3">
-          <button aria-label="Search" className="hidden rounded-full p-2 text-foreground/70 transition-colors hover:bg-muted hover:text-foreground md:inline-flex">
-            <Search size={18} />
-          </button>
-          <a href={BRAND.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="hidden rounded-full p-2 text-foreground/70 transition-colors hover:bg-muted hover:text-foreground md:inline-flex">
-            <Instagram size={18} />
-          </a>
-          <a href={BRAND.whatsapp} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="hidden rounded-full p-2 text-foreground/70 transition-colors hover:bg-muted hover:text-foreground md:inline-flex">
-            <WaIcon className="h-[18px] w-[18px]" />
-          </a>
-          <button onClick={() => setOpen(v => !v)} aria-label="Menu" className="rounded-full p-2 text-foreground/80 md:hidden">
-            {open ? <X size={20}/> : <Menu size={20}/>}
-          </button>
-        </div>
-      </div>
-
-      {open && (
-        <div className="border-t border-border/60 bg-background md:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col px-5 py-4">
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-8">
             {nav.map((n) => (
-              <Link key={n.to} to={n.to} onClick={() => setOpen(false)}
-                className="py-3 text-sm tracking-luxe uppercase text-foreground/80">
+              <Link
+                key={n.to}
+                to={n.to}
+                className="text-[0.78rem] tracking-wider uppercase text-[#5a5047] transition-colors hover:text-[#d64a86]"
+                activeProps={{ className: "text-[#d64a86]" }}
+                activeOptions={{ exact: n.to === "/" }}
+              >
                 {n.label}
               </Link>
             ))}
-            <div className="mt-2 flex gap-3 border-t border-border/60 pt-4">
-              <a href={BRAND.instagram} target="_blank" rel="noreferrer" className="rounded-full bg-muted p-3"><Instagram size={18}/></a>
-              <a href={BRAND.whatsapp} target="_blank" rel="noreferrer" className="rounded-full bg-muted p-3"><WaIcon className="h-[18px] w-[18px]"/></a>
-            </div>
           </nav>
+
+          {/* Icons */}
+          <div className="flex items-center gap-1">
+            {/* Search — desktop & mobile */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#5a5047] transition-colors hover:bg-[#f5f0eb] hover:text-[#2b2421]"
+            >
+              <Search size={17} />
+            </button>
+            <a
+              href={BRAND.instagram}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full text-[#5a5047] transition-colors hover:bg-[#f5f0eb] hover:text-[#2b2421]"
+            >
+              <Instagram size={17} />
+            </a>
+            <a
+              href={BRAND.whatsapp}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="WhatsApp"
+              className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full text-[#5a5047] transition-colors hover:bg-[#f5f0eb] hover:text-[#2b2421]"
+            >
+              <WaIcon className="h-[17px] w-[17px]" />
+            </a>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Menu"
+              className="inline-flex md:hidden h-9 w-9 items-center justify-center rounded-full text-[#2b2421]"
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
-      )}
-    </header>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="border-t border-[#e8e0d5] bg-white md:hidden">
+            <nav className="mx-auto flex max-w-7xl flex-col px-6 py-4">
+              {nav.map((n) => (
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  onClick={() => setMenuOpen(false)}
+                  className="border-b border-[#f0ece6] py-3 text-[0.78rem] tracking-wider uppercase text-[#5a5047]"
+                  activeProps={{ className: "text-[#d64a86]" }}
+                  activeOptions={{ exact: n.to === "/" }}
+                >
+                  {n.label}
+                </Link>
+              ))}
+              <div className="mt-4 flex gap-3 pt-2">
+                <a href={BRAND.instagram} target="_blank" rel="noreferrer" className="h-10 w-10 grid place-items-center rounded-full bg-[#f5f0eb] text-[#5a5047]">
+                  <Instagram size={17} />
+                </a>
+                <a href={BRAND.whatsapp} target="_blank" rel="noreferrer" className="h-10 w-10 grid place-items-center rounded-full bg-[#f5f0eb] text-[#5a5047]">
+                  <WaIcon className="h-[17px] w-[17px]" />
+                </a>
+              </div>
+            </nav>
+          </div>
+        )}
+      </header>
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   );
 }

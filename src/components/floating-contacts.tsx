@@ -3,22 +3,22 @@ import { BRAND } from "@/lib/brand";
 
 export function FloatingContacts() {
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3 md:bottom-8 md:right-8">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 md:bottom-8 md:right-8">
       <a
         href={BRAND.instagram}
         target="_blank"
         rel="noreferrer"
         aria-label="DM on Instagram"
-        className="grid h-12 w-12 place-items-center rounded-full bg-white text-foreground shadow-card transition-transform hover:-translate-y-0.5"
+        className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#2b2421] shadow-[0_4px_20px_rgba(43,36,33,0.12)] transition-transform hover:-translate-y-0.5"
       >
-        <Instagram size={20} />
+        <Instagram size={19} />
       </a>
       <a
         href={BRAND.whatsapp}
         target="_blank"
         rel="noreferrer"
         aria-label="Order on WhatsApp"
-        className="grid h-14 w-14 place-items-center rounded-full text-white shadow-soft transition-transform hover:-translate-y-0.5"
+        className="grid h-14 w-14 place-items-center rounded-full text-white shadow-[0_4px_24px_rgba(214,74,134,0.35)] transition-transform hover:-translate-y-0.5"
         style={{ backgroundImage: "var(--gradient-brand)" }}
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6" aria-hidden>

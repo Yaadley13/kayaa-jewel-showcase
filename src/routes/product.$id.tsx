@@ -1,10 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Instagram, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { useState } from "react";
 import { useProducts } from "@/lib/use-products";
 import { formatPrice } from "@/lib/products";
 import { ProductCard } from "@/components/product-card";
-import { igLinkFor, waLinkFor } from "@/lib/brand";
+import { waLinkFor } from "@/lib/brand";
+import { InstagramDmButton } from "@/components/instagram-dm-button";
 
 export const Route = createFileRoute("/product/$id")({
   component: ProductDetail,
@@ -18,10 +19,9 @@ export const Route = createFileRoute("/product/$id")({
 
 function ProductDetail() {
   const { id } = Route.useParams();
-  const [products] = useProducts();
+  const { data: products = [] } = useProducts();
   const product = products.find(p => p.id === id);
   const [active, setActive] = useState(0);
-  const [variant, setVariant] = useState("Gold");
 
   if (!product) throw notFound();
 
@@ -33,13 +33,13 @@ function ProductDetail() {
       <div className="mx-auto grid max-w-7xl gap-10 px-6 pt-10 pb-20 md:grid-cols-2 md:px-10 md:pt-16">
         {/* Gallery */}
         <div>
-          <div className="overflow-hidden rounded-2xl bg-muted shadow-card">
+          <div className="overflow-hidden rounded-2xl bg-[#f5f0eb]">
             <img src={gallery[active]} alt={product.name} className="aspect-[4/5] w-full object-cover" />
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3">
             {gallery.map((g, i) => (
               <button key={i} onClick={() => setActive(i)}
-                className={`overflow-hidden rounded-xl border-2 transition-colors ${active === i ? "border-foreground" : "border-transparent"}`}>
+                className={`overflow-hidden rounded-xl border-2 transition-colors ${active === i ? "border-[#2b2421]" : "border-transparent"}`}>
                 <img src={g} alt="" className="aspect-square w-full object-cover" />
               </button>
             ))}
@@ -48,35 +48,43 @@ function ProductDetail() {
 
         {/* Info */}
         <div>
-          <p className="text-[0.7rem] tracking-luxe uppercase text-muted-foreground">{product.category}</p>
-          <h1 className="mt-2 font-serif text-4xl md:text-5xl">{product.name}</h1>
-          <p className="mt-4 text-2xl text-foreground/90">{formatPrice(product.price)}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Price shown for reference. Enquire to order.</p>
+          <p className="text-[0.65rem] tracking-[0.22em] uppercase text-[#d64a86] font-medium">{product.category}</p>
+          <h1 className="mt-2 font-serif text-4xl text-[#2b2421] md:text-5xl">{product.name}</h1>
+          <p className="mt-4 text-2xl text-[#2b2421]">{formatPrice(product.price)}</p>
+          <p className="mt-1 text-xs text-[#9a8c82]">Price shown for reference. Enquire to order.</p>
 
-          <p className="mt-8 leading-relaxed text-muted-foreground">{product.description}</p>
+          <p className="mt-8 leading-relaxed text-[#5a5047]">{product.description}</p>
 
-          <div className="mt-8">
-            <p className="mb-3 text-[0.7rem] tracking-luxe uppercase text-muted-foreground">Finish</p>
-            <div className="flex gap-2">
-              {["Gold", "Rose Gold", "Silver"].map(v => (
-                <button key={v} onClick={() => setVariant(v)}
-                  className={`rounded-full border px-4 py-2 text-xs tracking-luxe uppercase ${variant === v ? "border-foreground bg-foreground text-white" : "border-border"}`}>
-                  {v}
-                </button>
-              ))}
+          {product.isSoldOut ? (
+            <div className="mt-9 rounded-2xl border border-[#e8e0d5] bg-[#faf7f4] px-5 py-4 text-center">
+              <p className="font-serif text-lg text-[#2b2421]">Currently Sold Out</p>
+              <p className="mt-1 text-sm text-[#9a8c82]">DM us on Instagram to join the waitlist for this piece.</p>
+              <InstagramDmButton
+                productName={product.name}
+                productPrice={product.price}
+                productCategory={product.category}
+                productId={product.id}
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border border-[#2b2421] px-6 py-2.5 text-[0.75rem] tracking-wider uppercase text-[#2b2421] transition-colors hover:bg-[#2b2421] hover:text-white"
+              />
             </div>
-          </div>
+          ) : (
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <a href={waLinkFor({ name: product.name, price: product.price, category: product.category, id: product.id })} target="_blank" rel="noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full py-3 text-[0.75rem] tracking-wider uppercase text-white transition-opacity hover:opacity-90"
+                style={{ backgroundImage: "var(--gradient-brand)" }}>
+                Order via WhatsApp
+              </a>
+              <InstagramDmButton
+                productName={product.name}
+                productPrice={product.price}
+                productCategory={product.category}
+                productId={product.id}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-[#2b2421] py-3 text-[0.75rem] tracking-wider uppercase text-[#2b2421] transition-colors hover:bg-[#2b2421] hover:text-white"
+              />
+            </div>
+          )}
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <a href={waLinkFor(`${product.name} (${variant})`)} target="_blank" rel="noreferrer" className="btn-gradient btn-gradient-hover flex-1">
-              Order via WhatsApp
-            </a>
-            <a href={igLinkFor(product.name)} target="_blank" rel="noreferrer" className="btn-outline-luxe flex-1">
-              <Instagram size={16}/> DM on Instagram
-            </a>
-          </div>
-
-          <ul className="mt-10 grid grid-cols-2 gap-4 border-t border-border/60 pt-6 text-xs text-muted-foreground">
+          <ul className="mt-10 grid grid-cols-2 gap-4 border-t border-[#e8e0d5] pt-6 text-xs text-[#7a6f66]">
             <li>✦ Handcrafted in small batches</li>
             <li>✦ Hypoallergenic, skin-safe</li>
             <li>✦ Gift-wrapped on request</li>
