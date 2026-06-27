@@ -6,6 +6,7 @@ import { CATEGORIES, formatPrice, type Product } from "@/lib/products";
 import { useDeleteProduct, useProducts, useUpsertProduct } from "@/lib/use-products";
 import { fetchContactSubmissions, markAsRead, deleteSubmission } from "@/lib/contact";
 import { fetchExhibitions, upsertExhibition, deleteExhibition, type Exhibition } from "@/lib/exhibitions";
+import { fileToJpegDataUrl } from "@/lib/image-utils";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Jewels by Kayaa" }, { name: "robots", content: "noindex" }] }),
@@ -178,10 +179,9 @@ function EditorModal({
   const [draft, setDraft] = useState<Product>(product);
   const update = <K extends keyof Product>(k: K, v: Product[K]) => setDraft(d => ({ ...d, [k]: v }));
 
-  const onImage = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => update("image", String(reader.result));
-    reader.readAsDataURL(file);
+  const onImage = async (file: File) => {
+    const url = await fileToJpegDataUrl(file);
+    update("image", url);
   };
 
   return (
@@ -473,10 +473,9 @@ function ExhibitionModal({
   const [draft, setDraft] = useState<Exhibition>(exhibition);
   const upd = <K extends keyof Exhibition>(k: K, v: Exhibition[K]) => setDraft((d) => ({ ...d, [k]: v }));
 
-  const readImage = (file: File, cb: (url: string) => void) => {
-    const r = new FileReader();
-    r.onload = () => cb(String(r.result));
-    r.readAsDataURL(file);
+  const readImage = async (file: File, cb: (url: string) => void) => {
+    const url = await fileToJpegDataUrl(file);
+    cb(url);
   };
 
   const addPhotos = (files: FileList) => {

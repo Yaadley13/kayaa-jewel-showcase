@@ -74,6 +74,8 @@ export function productToRow(p: Product): Database["public"]["Tables"]["products
 
 // ─── Supabase CRUD ────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 16;
+
 export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
@@ -82,6 +84,69 @@ export async function fetchProducts(): Promise<Product[]> {
 
   if (error) throw error;
   return (data ?? []).map(rowToProduct);
+}
+
+export type ProductsPage = {
+  products: Product[];
+  total: number;
+  hasMore: boolean;
+};
+
+export async function fetchProductsPage(
+  page: number,
+  filters: {
+    category?: string;
+    maxPrice?: number;
+    sort?: string;
+    preFilter?: "featured" | "bestseller" | "new" | null;
+  } = {},
+): Promise<ProductsPage> {
+  const from = page * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  let query = supabase
+    .from("products")
+    .select("*", { count: "exact" });
+
+  // Pre-filters from home sections
+  if (filters.preFilter === "featured") query = query.eq("featured", true);
+  if (filters.preFilter === "bestseller") query = query.eq("is_best_seller", true);
+  if (filters.preFilter === "new") query = query.eq("is_new", true);
+
+  // Category
+  if (filters.category && filters.category !== "All") {
+    query = query.eq("category", filters.category);
+  }
+
+  // Price
+  if (filters.maxPrice) {
+    query = query.lte("price", filters.maxPrice);
+  }
+
+  // Sort
+  if (filters.sort === "price-asc") {
+    query = query.order("price", { ascending: true });
+  } else if (filters.sort === "price-desc") {
+    query = query.order("price", { ascending: false });
+  } else if (filters.sort === "new") {
+    query = query.order("is_new", { ascending: false }).order("created_at", { ascending: false });
+  } else {
+    // default: featured first
+    query = query.order("featured", { ascending: false }).order("created_at", { ascending: false });
+  }
+
+  const { data, error, count } = await query.range(from, to);
+
+  if (error) throw error;
+
+  const total = count ?? 0;
+  const products = (data ?? []).map(rowToProduct);
+
+  return {
+    products,
+    total,
+    hasMore: from + products.length < total,
+  };
 }
 
 export async function upsertProduct(product: Product): Promise<Product> {
