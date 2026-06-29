@@ -13,6 +13,27 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/shop")({
   validateSearch: searchSchema,
+  // Non-blocking loader — kicks off the prefetch but doesn't await it.
+  // Navigation completes instantly; skeleton shows while data arrives.
+  // On hover/focus (defaultPreload: "intent") this often completes before the click.
+  loader: ({ context: { queryClient }, location }) => {
+    const filter = (location.search as { filter?: string }).filter as
+      | "featured"
+      | "bestseller"
+      | "new"
+      | undefined;
+    void queryClient.prefetchInfiniteQuery({
+      queryKey: ["products-page", { cat: "All", maxPrice: "all", sort: "featured", activeFilter: filter ?? null }],
+      queryFn: ({ pageParam }) =>
+        fetchProductsPage(pageParam as number, {
+          category: "All",
+          sort: "featured",
+          preFilter: filter ?? null,
+        }),
+      initialPageParam: 0,
+      staleTime: 2 * 60 * 1000,
+    });
+  },
   head: () => ({
     meta: [
       { title: "Shop — Jewels by Kayaa" },

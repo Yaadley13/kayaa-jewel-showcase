@@ -2,7 +2,6 @@ import necklace from "@/assets/product-necklace.jpg";
 import earrings from "@/assets/product-earrings.jpg";
 import ring from "@/assets/product-ring.jpg";
 import bracelet from "@/assets/product-bracelet.jpg";
-import { supabase } from "./supabase";
 import type { Database } from "./database.types";
 
 export type Product = {
@@ -72,25 +71,48 @@ export function productToRow(p: Product): Database["public"]["Tables"]["products
   };
 }
 
-// ─── Supabase CRUD ────────────────────────────────────────────────────────────
+// ─── API (server functions) ───────────────────────────────────────────────────
+// All Supabase access is now server-side via createServerFn — no direct DB
+// calls from the browser. Import here to keep a single call-site for consumers.
 
-const PAGE_SIZE = 16;
-
-export async function fetchProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return (data ?? []).map(rowToProduct);
-}
+import {
+  apiFetchProducts,
+  apiFetchHomeProducts,
+  apiFetchProduct,
+  apiFetchRelatedProducts,
+  apiFetchProductsPage,
+  apiUpsertProduct,
+  apiDeleteProduct,
+  apiSeedIfEmpty,
+} from "./api/products";
 
 export type ProductsPage = {
   products: Product[];
   total: number;
   hasMore: boolean;
 };
+
+export type HomeProducts = {
+  featured: Product[];
+  bestSellers: Product[];
+  newArrivals: Product[];
+};
+
+export async function fetchProducts(): Promise<Product[]> {
+  return apiFetchProducts();
+}
+
+export async function fetchHomeProducts(): Promise<HomeProducts> {
+  return apiFetchHomeProducts();
+}
+
+export async function fetchProduct(id: string): Promise<Product | null> {
+  return apiFetchProduct({ data: id });
+}
+
+export async function fetchRelatedProducts(id: string, category: string): Promise<Product[]> {
+  return apiFetchRelatedProducts({ data: { id, category } });
+}
 
 export async function fetchProductsPage(
   page: number,
@@ -101,82 +123,27 @@ export async function fetchProductsPage(
     preFilter?: "featured" | "bestseller" | "new" | null;
   } = {},
 ): Promise<ProductsPage> {
-  const from = page * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
-
-  let query = supabase
-    .from("products")
-    .select("*", { count: "exact" });
-
-  // Pre-filters from home sections
-  if (filters.preFilter === "featured") query = query.eq("featured", true);
-  if (filters.preFilter === "bestseller") query = query.eq("is_best_seller", true);
-  if (filters.preFilter === "new") query = query.eq("is_new", true);
-
-  // Category
-  if (filters.category && filters.category !== "All") {
-    query = query.eq("category", filters.category);
-  }
-
-  // Price
-  if (filters.maxPrice) {
-    query = query.lte("price", filters.maxPrice);
-  }
-
-  // Sort
-  if (filters.sort === "price-asc") {
-    query = query.order("price", { ascending: true });
-  } else if (filters.sort === "price-desc") {
-    query = query.order("price", { ascending: false });
-  } else if (filters.sort === "new") {
-    query = query.order("is_new", { ascending: false }).order("created_at", { ascending: false });
-  } else {
-    // default: featured first
-    query = query.order("featured", { ascending: false }).order("created_at", { ascending: false });
-  }
-
-  const { data, error, count } = await query.range(from, to);
-
-  if (error) throw error;
-
-  const total = count ?? 0;
-  const products = (data ?? []).map(rowToProduct);
-
-  return {
-    products,
-    total,
-    hasMore: from + products.length < total,
-  };
+  return apiFetchProductsPage({
+    data: {
+      page,
+      category: filters.category,
+      maxPrice: filters.maxPrice,
+      sort: filters.sort,
+      preFilter: filters.preFilter ?? null,
+    },
+  });
 }
 
 export async function upsertProduct(product: Product): Promise<Product> {
-  const { data, error } = await supabase
-    .from("products")
-    .upsert(productToRow(product), { onConflict: "id" })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return rowToProduct(data);
+  return apiUpsertProduct({ data: product });
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  const { error } = await supabase.from("products").delete().eq("id", id);
-  if (error) throw error;
+  return apiDeleteProduct({ data: id });
 }
 
 export async function seedIfEmpty(): Promise<void> {
-  const { count, error } = await supabase
-    .from("products")
-    .select("*", { count: "exact", head: true });
-
-  if (error) throw error;
-  if ((count ?? 0) > 0) return;
-
-  // Strip local asset imports — use empty string as placeholder image when seeding
-  const rows = seedProducts.map((p) => productToRow({ ...p, image: "", imageAlt: "" }));
-  const { error: insertError } = await supabase.from("products").insert(rows);
-  if (insertError) throw insertError;
+  return apiSeedIfEmpty();
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

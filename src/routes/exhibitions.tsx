@@ -4,6 +4,13 @@ import { ArrowRight, CalendarDays, MapPin } from "lucide-react";
 import { fetchExhibitions, type Exhibition } from "@/lib/exhibitions";
 
 export const Route = createFileRoute("/exhibitions")({
+  loader: ({ context: { queryClient } }) => {
+    void queryClient.prefetchQuery({
+      queryKey: ["exhibitions"],
+      queryFn: fetchExhibitions,
+      staleTime: 5 * 60 * 1000,
+    });
+  },
   head: () => ({
     meta: [
       { title: "Exhibitions — Jewels by Kayaa" },

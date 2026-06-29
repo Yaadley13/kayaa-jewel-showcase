@@ -20,8 +20,18 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: false,
+
+    // Start fetching on hover/focus — by the time the user clicks,
+    // data is often already in the cache.
+    defaultPreload: "intent",
+
     // Preloaded data is considered fresh for 30 seconds
     defaultPreloadStaleTime: 30_000,
+
+    // Navigate immediately; show the new page with its skeleton/loading state
+    // rather than staying on the old page while data loads.
+    // 0 = no artificial delay before showing the pending UI.
+    defaultPendingMs: 0,
   });
 
   return router;

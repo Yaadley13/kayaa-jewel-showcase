@@ -1,13 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
-import { useProducts } from "@/lib/use-products";
+import { useHomeProducts, HOME_PRODUCTS_KEY } from "@/lib/use-products";
+import { fetchHomeProducts } from "@/lib/products";
 import { ProductCard } from "@/components/product-card";
 import { ProductGridSkeleton } from "@/components/product-card-skeleton";
 import { BRAND } from "@/lib/brand";
 import type { Product } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
+  // Non-blocking loader — kicks off the prefetch but doesn't await it.
+  // Navigation completes instantly; skeleton shows while data arrives.
+  // On hover/focus (defaultPreload: "intent") this often completes before the click.
+  loader: ({ context: { queryClient } }) => {
+    void queryClient.prefetchQuery({
+      queryKey: HOME_PRODUCTS_KEY,
+      queryFn: fetchHomeProducts,
+      staleTime: 5 * 60 * 1000,
+    });
+  },
   head: () => ({
     meta: [
       { title: "Jewels by Kayaa — Delicate. Timeless. Yours." },
@@ -20,10 +31,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { data: products = [], isLoading } = useProducts();
-  const featured = products.filter((p) => p.featured).slice(0, 4);
-  const bestsellers = products.filter((p) => p.isBestSeller).slice(0, 4);
-  const newArrivals = products.filter((p) => p.isNew).slice(0, 4);
+  // Data is already in cache from the SSR loader — no loading spinner on first paint
+  const { data, isLoading } = useHomeProducts();
+  const featured = data?.featured ?? [];
+  const bestsellers = data?.bestSellers ?? [];
+  const newArrivals = data?.newArrivals ?? [];
 
   return (
     <>
@@ -35,10 +47,7 @@ function Home() {
             alt="Handcrafted jewellery on cream silk"
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
-          {/* Overlay gradient — left side fade for text readability */}
           <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/40 to-transparent" />
-
-          {/* Text content */}
           <div className="relative flex h-full items-center">
             <div className="mx-auto w-full max-w-7xl px-6 md:px-10">
               <div className="max-w-md animate-fadeup">
@@ -108,7 +117,6 @@ function Home() {
           </Link>
         </div>
       </section>
-
     </>
   );
 }
@@ -174,4 +182,3 @@ function ProductSection({
     </section>
   );
 }
-

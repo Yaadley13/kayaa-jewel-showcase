@@ -1,12 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2, Mail, MailOpen, Pencil, Plus, Star, Trash2, X } from "lucide-react";
+import { ImagePlus, Loader2, LogOut, Mail, MailOpen, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { CATEGORIES, formatPrice, type Product } from "@/lib/products";
 import { useDeleteProduct, useProducts, useUpsertProduct } from "@/lib/use-products";
 import { fetchContactSubmissions, markAsRead, deleteSubmission } from "@/lib/contact";
 import { fetchExhibitions, upsertExhibition, deleteExhibition, type Exhibition } from "@/lib/exhibitions";
 import { fileToJpegDataUrl } from "@/lib/image-utils";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Jewels by Kayaa" }, { name: "robots", content: "noindex" }] }),
@@ -14,25 +15,61 @@ export const Route = createFileRoute("/admin")({
 });
 
 function Admin() {
+  const navigate = useNavigate();
+  const { session, loading, signOut } = useAuth();
   const [tab, setTab] = useState<"products" | "exhibitions" | "contacts">("products");
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !session) {
+      navigate({ to: "/admin-login" });
+    }
+  }, [session, loading, navigate]);
+
+  // Show spinner while resolving stored session
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={22} className="animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // While redirecting (no session), render nothing
+  if (!session) return null;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/admin-login" });
+  };
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16">
-      {/* Tab switcher */}
-      <div className="mb-8 flex gap-2 border-b border-border/60">
-        {(["products", "exhibitions", "contacts"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`pb-3 px-1 text-[0.78rem] tracking-luxe uppercase transition-colors border-b-2 -mb-px ${
-              tab === t
-                ? "border-[color:var(--color-pink)] text-[#2b2421] font-medium"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t === "products" ? "Products" : t === "exhibitions" ? "Exhibitions" : "Messages"}
-          </button>
-        ))}
+      {/* Tab switcher + sign-out */}
+      <div className="mb-8 flex items-center justify-between border-b border-border/60">
+        <div className="flex gap-2">
+          {(["products", "exhibitions", "contacts"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`pb-3 px-1 text-[0.78rem] tracking-luxe uppercase transition-colors border-b-2 -mb-px ${
+                tab === t
+                  ? "border-[color:var(--color-pink)] text-[#2b2421] font-medium"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t === "products" ? "Products" : t === "exhibitions" ? "Exhibitions" : "Messages"}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={handleSignOut}
+          title="Sign out"
+          className="mb-2 flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[0.7rem] tracking-luxe uppercase text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+        >
+          <LogOut size={13} />
+          Sign out
+        </button>
       </div>
 
       {tab === "products" ? <ProductsTab /> : tab === "exhibitions" ? <ExhibitionsTab /> : <ContactsTab />}

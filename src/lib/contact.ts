@@ -1,5 +1,13 @@
-import { supabase } from "./supabase";
+/**
+ * Contact form helpers — all DB access goes through server functions.
+ */
 import type { Database } from "./database.types";
+import {
+  apiSubmitContactForm,
+  apiFetchContactSubmissions,
+  apiMarkAsRead,
+  apiDeleteSubmission,
+} from "./api/contact";
 
 export type ContactSubmission = Database["public"]["Tables"]["contact_submissions"]["Row"];
 
@@ -9,31 +17,17 @@ export async function submitContactForm(data: {
   subject: string;
   message: string;
 }): Promise<void> {
-  const { error } = await supabase.from("contact_submissions").insert(data);
-  if (error) throw error;
+  return apiSubmitContactForm({ data });
 }
 
 export async function fetchContactSubmissions(): Promise<ContactSubmission[]> {
-  const { data, error } = await supabase
-    .from("contact_submissions")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  return apiFetchContactSubmissions();
 }
 
 export async function markAsRead(id: string, read: boolean): Promise<void> {
-  const { error } = await supabase
-    .from("contact_submissions")
-    .update({ read })
-    .eq("id", id);
-  if (error) throw error;
+  return apiMarkAsRead({ data: { id, read } });
 }
 
 export async function deleteSubmission(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("contact_submissions")
-    .delete()
-    .eq("id", id);
-  if (error) throw error;
+  return apiDeleteSubmission({ data: id });
 }

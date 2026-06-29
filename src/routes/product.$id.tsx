@@ -1,32 +1,85 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 import { useState } from "react";
-import { useProducts } from "@/lib/use-products";
-import { formatPrice } from "@/lib/products";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProduct, fetchRelatedProducts, formatPrice } from "@/lib/products";
 import { ProductCard } from "@/components/product-card";
 import { waLinkFor } from "@/lib/brand";
 import { InstagramDmButton } from "@/components/instagram-dm-button";
 
 export const Route = createFileRoute("/product/$id")({
-  component: ProductDetail,
+  // Non-blocking loader — kicks off both fetches but doesn't await them.
+  // Navigation is instant; the product detail renders immediately using
+  // cached data if available, or shows loading state while it arrives.
+  // On hover (defaultPreload: "intent") the fetch usually completes before the click.
+  loader: ({ context: { queryClient }, params: { id } }) => {
+    // We can't know the category without fetching the product first,
+    // so chain the related fetch once product resolves — still non-blocking.
+    void queryClient.prefetchQuery({
+      queryKey: ["product", id],
+      queryFn: () => fetchProduct(id),
+      staleTime: 5 * 60 * 1000,
+    }).then((product) => {
+      if (product) {
+        void queryClient.prefetchQuery({
+          queryKey: ["related-products", id],
+          queryFn: () => fetchRelatedProducts(id, product.category),
+          staleTime: 5 * 60 * 1000,
+        });
+      }
+    });
+  },
   notFoundComponent: () => (
     <div className="mx-auto max-w-xl px-6 py-32 text-center">
       <h1 className="font-serif text-3xl">Piece not found</h1>
       <Link to="/shop" className="mt-6 inline-flex btn-outline-luxe">Back to shop</Link>
     </div>
   ),
+  component: ProductDetail,
 });
 
 function ProductDetail() {
   const { id } = Route.useParams();
-  const { data: products = [] } = useProducts();
-  const product = products.find(p => p.id === id);
   const [active, setActive] = useState(0);
 
-  if (!product) throw notFound();
+  const { data: product } = useQuery({
+    queryKey: ["product", id],
+    queryFn: () => fetchProduct(id),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: related = [] } = useQuery({
+    queryKey: ["related-products", id],
+    queryFn: () => fetchRelatedProducts(id, product?.category ?? ""),
+    enabled: !!product,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (!product) {
+    // Still loading (prefetch in-flight) — show skeleton
+    return (
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 pt-10 pb-20 md:grid-cols-2 md:px-10 md:pt-16">
+        <div className="animate-pulse space-y-4">
+          <div className="aspect-[4/5] w-full rounded-2xl bg-[#ede8e3]" />
+          <div className="grid grid-cols-3 gap-3">
+            {[0,1,2].map(i => <div key={i} className="aspect-square rounded-xl bg-[#ede8e3]" />)}
+          </div>
+        </div>
+        <div className="animate-pulse space-y-4 pt-4">
+          <div className="h-3 w-1/4 rounded-full bg-[#ede8e3]" />
+          <div className="h-8 w-3/4 rounded-full bg-[#ede8e3]" />
+          <div className="h-6 w-1/3 rounded-full bg-[#ede8e3]" />
+          <div className="mt-8 space-y-2">
+            <div className="h-3 w-full rounded-full bg-[#ede8e3]" />
+            <div className="h-3 w-5/6 rounded-full bg-[#ede8e3]" />
+            <div className="h-3 w-4/6 rounded-full bg-[#ede8e3]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const gallery = [product.image, product.imageAlt ?? product.image, product.image];
-  const related = products.filter(p => p.id !== product.id && p.category === product.category).slice(0, 4);
 
   return (
     <>
